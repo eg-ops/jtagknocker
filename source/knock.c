@@ -57,10 +57,10 @@ static void knock_ScanReset(unsigned int tck, unsigned int tms)
 	jtagTAP_SetState(JTAGTAP_STATE_UNKNOWN);
 	jtagTAP_SetState(JTAGTAP_STATE_DR_SHIFT);
 
-	prev_data = GPIOD_IDR;
+	prev_data = GPIOA_IDR;
 	for(count = 0; count < KNOCK_RESULTS; ++count)
 	{
-		data = GPIOD_IDR;
+		data = GPIOA_IDR;
 		data_changed = data ^ prev_data;
 		data_interesting |= data_changed;
 
@@ -154,14 +154,14 @@ static void knock_ScanResetFindTDI(unsigned int tck, unsigned int tms, uint16_t 
 				{
 					//we aren't already using this pin
 					unsigned int clocks, changes = 0;
-					unsigned int prev_tdo_val = (GPIOD_IDR & (1 << tdo));
+					unsigned int prev_tdo_val = (GPIOA_IDR & (1 << tdo));
 
 					jtag_Cfg(JTAG_SIGNAL_TDI, tdi);
 					jtag_Set(JTAG_SIGNAL_TDI, ((tdi_state >> tdi) & 1) == 0);	//toggle the TDI pin
 
 					for(clocks = 0; clocks < nresults; ++clocks)
 					{
-						unsigned int tdo_val = (GPIOD_IDR & (1 << tdo));
+						unsigned int tdo_val = (GPIOA_IDR & (1 << tdo));
 						jtag_Clock();
 
 						if((tdo_val ^ prev_tdo_val) != 0)
@@ -226,7 +226,7 @@ static void knock_ScanBypass(unsigned int tck, unsigned int tms)
 			{
 				jtag_Clock();
 			}
-			tdo_candidates = GPIOD_IDR;	//any pin which is set here and changes to
+			tdo_candidates = GPIOA_IDR;	//any pin which is set here and changes to
 							//0 once and stays there is probably TDO
 
 			jtag_Set(JTAG_SIGNAL_TDI, false);
@@ -240,7 +240,7 @@ static void knock_ScanBypass(unsigned int tck, unsigned int tms)
 				uint16_t tdo_sample ;
 				jtag_Clock();
 
-				tdo_sample = GPIOD_IDR;
+				tdo_sample = GPIOA_IDR;
 
 				for(tdo = 0; tdo < knock_PinCount; ++tdo)
 				{
