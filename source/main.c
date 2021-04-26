@@ -33,7 +33,8 @@ void main()
 {
 
 	//setup
-	rcc_clock_setup_hsi(&hsi_8mhz[CLOCK_64MHZ]);
+	//	rcc_clock_setup_hsi(&hsi_8mhz[CLOCK_64MHZ]);
+	rcc_clock_setup_in_hse_8mhz_out_72mhz();
 	serial_Init();
 	message_Init();
 	comproc_Init();

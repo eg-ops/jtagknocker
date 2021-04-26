@@ -2,8 +2,8 @@
 #Change DEVICE to the full device name of your ARM Cortex processor and
 #PLATFORM to the one appropriate for libopencm3. Defaults to the STM32F3
 #Launchpad
-DEVICE ?= stm32f303vct6
-PLATFORM ?= STM32F3
+DEVICE ?= stm32f103c8t6
+PLATFORM ?= STM32F1
 
 #Change CROSS_COMPILE to match your toolchain, or provide it on the command line
 CROSS_COMPILE ?= arm-none-eabi-

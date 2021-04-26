@@ -50,12 +50,15 @@ void jtag_Init()
 
 	//set up the io ports to be all inputs, push-pull, no pullups and slow when set as outputs.
 	//outputs default to 0
-	GPIOD_MODER = 0x00000000;
-	GPIOD_OTYPER = 0x00000000;
-	GPIOD_OSPEEDR = 0x00000000;
-	GPIOD_PUPDR = 0x00000000;
-	GPIOD_BSRR = 0xFFFF0000;
-	RCC_AHBENR |= 0x00100000;	//Enable GPIOD clock
+	//GPIOA_MODER = 0x00000000;
+	//GPIOA_OTYPER = 0x00000000;
+	//GPIOA_OSPEEDR = 0x00000000;
+	GPIOA_CRL = 0x00000000;
+	GPIOA_CRH = 0x00000000;
+	//GPIOA_PUPDR = 0x00000000;
+	GPIOA_BSRR = 0xFFFF0000;
+	
+	rcc_periph_clock_enable(RCC_GPIOA);
 
 	//assign the default signal allocation
 	jtag_Cfg(JTAG_SIGNAL_TCK, 0);
@@ -91,16 +94,15 @@ bool jtag_Cfg(jtag_Signal sig, int num)
 					//Deconfigure the old pin if allocated
 					if(jtag_Signals[sig] != JTAG_SIGNAL_NOT_ALLOCATED)
 					{
-						mask_and = 3 << (jtag_Signals[sig] * 2);
-						GPIOD_MODER = (GPIOD_MODER & ~mask_and);
-						jtag_PinUsage &= ~(1<<jtag_Signals[sig]);	//mark as un-allocated
+						unsigned int old_sig = jtag_Signals[sig];
+						gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,  (1 << old_sig));
+						jtag_PinUsage &= ~(1<<old_sig);	//mark as un-allocated
 					}
 
 					//Configure the IO port mode
-					mask_and = 3 << (num * 2);
-					mask_or = ((sig == JTAG_SIGNAL_TDO) || (sig == JTAG_SIGNAL_RTCK)) ? 0 : 1;	//Input or output?
-					mask_or = mask_or << (num * 2);
-					GPIOD_MODER = (GPIOD_MODER & ~mask_and) | mask_or;
+					int mode = ((sig == JTAG_SIGNAL_TDO) || (sig == JTAG_SIGNAL_RTCK)) ? GPIO_MODE_OUTPUT_10_MHZ : GPIO_MODE_INPUT;
+					int cnf = ((sig == JTAG_SIGNAL_TDO) || (sig == JTAG_SIGNAL_RTCK)) ? GPIO_CNF_OUTPUT_PUSHPULL : GPIO_CNF_INPUT_FLOAT;
+					gpio_set_mode(GPIOA, mode, cnf,  (1 << jtag_Signals[sig]));
 					jtag_PinUsage |= (1<<num);
 					jtag_Signals[sig] = num;	//set the allocation
 					success = true;
@@ -112,8 +114,7 @@ bool jtag_Cfg(jtag_Signal sig, int num)
 				unsigned int old_sig = jtag_Signals[sig];
 				if(old_sig != JTAG_SIGNAL_NOT_ALLOCATED)
 				{
-					mask_and = 3 << (old_sig * 2);
-					GPIOD_MODER = (GPIOD_MODER & ~mask_and);
+					gpio_set_mode(GPIOA, GPIO_MODE_INPUT, GPIO_CNF_INPUT_FLOAT,  (1 << old_sig));
 					jtag_PinUsage &= ~(1<<jtag_Signals[sig]);	//mark as un-allocated
 				}
 				jtag_Signals[sig] = num;	//set the allocation
@@ -161,7 +162,7 @@ void jtag_Set(jtag_Signal sig, bool val)
 				//resetting, shift it further
 				pinNum = pinNum << 16;
 			}
-			GPIOD_BSRR = pinNum;
+			GPIOA_BSRR = pinNum;
 		}
 	}
 }
@@ -181,7 +182,7 @@ bool jtag_Get(jtag_Signal sig)
 	if(pinNum != JTAG_SIGNAL_NOT_ALLOCATED)
 	{
 		//read the pin state from the input register
-		pinState = ((GPIOD_IDR & (1 << pinNum)) != 0);
+		pinState = ((GPIOA_IDR & (1 << pinNum)) != 0);
 	}
 
 	return pinState;
