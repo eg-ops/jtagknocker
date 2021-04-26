@@ -26,8 +26,8 @@ include libopencm3/ld/Makefile.linker
 ROM_BASE := $(shell echo $(CFLAGS) | grep -Eo "ROM_OFF=0x[0-9A-Fa-f]{8}" | sed -e 's/ROM_OFF=//')
 
 SOURCE_OBJS := $(addprefix build/$(TARGET)/, $(patsubst %c,%o,$(shell find source -name '*.c')))
-SOURCE_CFLAGS := -c -Ilibopencm3/include -O2 -ffunction-sections -D$(PLATFORM)=1
-SOURCE_LDFLAGS := -Llibopencm3/lib -T$(LDSCRIPT) -Xlinker --gc-sections -nostartfiles
+SOURCE_CFLAGS := -c -Ilibopencm3/include -O2 -ffunction-sections -D$(PLATFORM)=1 
+SOURCE_LDFLAGS := -Llibopencm3/lib -T$(LDSCRIPT)  -nostartfiles
 
 TEST_OBJS := $(addprefix build/$(TARGET)/, $(patsubst %c,%o,$(shell find test -name '*.c')))
 TEST_CFLAGS := -c -Ilibopencm3/include -O2 -ffunction-sections -D$(PLATFORM)=1
@@ -41,7 +41,7 @@ test: build/$(TARGET)/test.bin
 
 build/$(TARGET)/jtagknocker.elf: $(SOURCE_OBJS) $(LDSCRIPT)
 	@echo "      LD $@"
-	@$(CC) -o $@ $(CFLAGS) $(SOURCE_LDFLAGS) $(SOURCE_OBJS) $(LDFLAGS)
+	@$(CC) -o $@ $(CFLAGS) $(SOURCE_LDFLAGS) $(SOURCE_OBJS) $(LDFLAGS)  -Wl,--start-group -lc -lc -lnosys -Wl,--end-group
 
 build/$(TARGET)/source/%.o: source/%.c
 	@echo "      CC $@"
